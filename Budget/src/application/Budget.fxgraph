@@ -1,0 +1,10 @@
+package application
+
+import javafx.scene.layout.AnchorPane
+import application.BudgetController
+
+component Budget controlledby BudgetController {
+	AnchorPane {
+		//TODO Add Nodes
+	}
+}
