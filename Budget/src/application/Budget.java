@@ -1,11 +1,17 @@
 package application;
 
+import java.time.LocalDate;
+
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
 public class Budget {
 
-	private Double date;
+	private LocalDate pd;
 	private String usage;
 	private Double budget;
 	private Double mp;
+	private Double mr;
+	
 	
 	
 	public  Budget()
@@ -14,20 +20,15 @@ public class Budget {
 	}
 	public Budget(Double date, Object object )
 	{
-		this.date=0.0;
 		this.budget=0.0;
+		this.mr=0.0;
 		this.mp=0.0;
 		this.usage="";
 	}
 	
 	
 
-	public Double getDate() {
-		return date;
-	}
-	public void setDate(Double date) {
-		this.date = date;
-	}
+	
 	public String getUsage() {
 		return usage;
 	}
@@ -46,4 +47,27 @@ public class Budget {
 	public void setMp(Double mp) {
 		this.mp = mp;
 	}
+	
+	public Double getMr() {
+		return mr;
+	}
+	public void setMr(Double mr) {
+		this.mr = mr;
+	}
+	
+	//Date examen
+		@XmlJavaTypeAdapter(LocalDateAdapter.class)
+		public LocalDate getDate() {
+			return pd;
+		}
+
+		public void setDate(LocalDate pd) {
+			this.pd = pd;
+		}
+		
+		
+			
+	
+	
+	
 }

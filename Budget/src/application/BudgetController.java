@@ -2,6 +2,7 @@ package application;
 
 import java.io.File;
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
@@ -9,6 +10,7 @@ import java.util.prefs.Preferences;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,6 +21,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -31,9 +34,13 @@ public class BudgetController implements Initializable{
 
 	@FXML
 	private TableColumn<Budget, Double> mpColumn;
+	
+	@FXML
+	private TableColumn<Budget, Double> mrColumn;
+
 
 	@FXML
-	private TextField txtDate;
+	private DatePicker PDate;
 
 	@FXML
 	private TextField txtMP;
@@ -66,10 +73,11 @@ public class BudgetController implements Initializable{
 	private Button btnModifier;
 
 	@FXML
-	private TableColumn<Budget, Double> dateColumn;
+	private TableColumn<Budget, DatePicker> dateColumn;
 
 	@FXML
 	private Button btnAjouter;
+	
 
 	private ObservableList<String> list=(ObservableList<String>) FXCollections.observableArrayList("Général", "Ventes & Marketing", "Recherche & développement");
 
@@ -83,10 +91,12 @@ public class BudgetController implements Initializable{
 
 
 	@Override public void initialize(URL location, ResourceBundle resources) {
-		cboUsage.setItems(list); dateColumn.setCellValueFactory(new PropertyValueFactory<>("date")); 
+		cboUsage.setItems(list);
+		dateColumn.setCellValueFactory(new PropertyValueFactory<>("date")); 
 		bmontantColumn.setCellValueFactory(new PropertyValueFactory<>("budget")); 
 		usageColumn.setCellValueFactory(new PropertyValueFactory<>("usage")); 
 		mpColumn.setCellValueFactory(new PropertyValueFactory<>("mp"));
+		mrColumn.setCellValueFactory(new PropertyValueFactory<>("mr"));
 		budgetTable.setItems(budgetData); 
 
 		btnModifier.setDisable(true);
@@ -101,25 +111,13 @@ public class BudgetController implements Initializable{
 	
 	
 	
-	public void verfiNum()
-	{
-		txtDate.textProperty().addListener((observable,oldValue,newValue)->
-		{
-			if(!newValue.matches("^[0-9](\\.[0-9]+)?$"))
-			{
-				txtDate.setText(newValue.replaceAll("[^\\d*]", ""));
-
-			}
-		});
-	}
-	
 	
 	
 	private boolean noEmptyInput()
 	{
 		String errorMessage="";
-		if(txtDate.getText().trim().equals("")) {
-			errorMessage+="Le champ Date ne doit pas etre vide \n";
+		if(PDate.getValue()==null) {
+			errorMessage+="Le champ Usage ne doit pas etre vide \n";
 
 		}
 		if(txtBmontant.getText().trim().equals("")) {
@@ -132,6 +130,9 @@ public class BudgetController implements Initializable{
 		if(cboUsage.getValue()==null) {
 			errorMessage+="Le champ Usage ne doit pas etre vide \n";
 
+		}
+		if(BudgetR.getText().trim().equals("")) {
+			errorMessage+="Le champ Montant Prise ne doit pas etre vide \n";
 		}
 		if(errorMessage.length()==0)
 		{
@@ -150,6 +151,16 @@ public class BudgetController implements Initializable{
 
 
 
+@FXML
+public void Substraction()
+{
+	double num1= Double.parseDouble(txtBmontant.getText());
+	double num2= Double.parseDouble(txtMP.getText());
+	double result= num1-num2;
+	BudgetR.setText(Double.toString(result));
+}
+
+
 
 
 
@@ -164,10 +175,11 @@ public class BudgetController implements Initializable{
 			{
 		Budget tmp=new Budget();
 		tmp= new Budget();
-		tmp.setDate(Double.parseDouble(txtDate.getText()));
+		tmp.setDate(PDate.getValue());
 		tmp.setBudget(Double.parseDouble(txtBmontant.getText()));
 		tmp.setMp(Double.parseDouble(txtMP.getText()));
 		tmp.setUsage(cboUsage.getValue());
+		tmp.setMr(Double.parseDouble(BudgetR.getText()));
 		budgetData.add(tmp);
 		clearFields();
 	}
@@ -177,9 +189,11 @@ public class BudgetController implements Initializable{
 	public void clearFields()
 	{
 		cboUsage.setValue(null);
+		PDate.setValue(null);
 		txtBmontant.setText("");
 		txtMP.setText("");
-		txtDate.setText("");
+		BudgetR.setText("");
+		budgetTable.getSelectionModel().clearSelection();
 	}
 
 	
@@ -187,10 +201,11 @@ public class BudgetController implements Initializable{
 	{
 		if(budget !=null)
 		{
-			cboUsage.setValue(budget.getUsage());
-			txtDate.setText(Double.toString(budget.getDate()));    	
+			cboUsage.setValue(budget.getUsage()); 
+			PDate.setValue(budget.getDate());
 			txtMP.setText(Double.toString(budget.getMp()));
 			txtBmontant.setText(Double.toString(budget.getBudget()));
+			BudgetR.setText(Double.toString(budget.getMr()));
 			btnModifier.setDisable(false);
 			btnEffacer.setDisable(false);
 			btnClear.setDisable(false);
@@ -207,10 +222,10 @@ public class BudgetController implements Initializable{
 	if(noEmptyInput())
 			{
 			Budget budget=budgetTable.getSelectionModel().getSelectedItem();
-	
+			budget.setDate(PDate.getValue());
 			budget.setBudget(Double.parseDouble(txtBmontant.getText()));
+			budget.setMr(Double.parseDouble(BudgetR.getText()));
 			budget.setMp(Double.parseDouble(txtMP.getText()));
-			budget.setDate(Double.parseDouble(txtDate.getText()));
 			budget.setUsage(cboUsage.getValue());
 			budgetTable.refresh();
 			}
@@ -229,16 +244,6 @@ public class BudgetController implements Initializable{
 				budgetTable.getItems().remove(selectedIndex);
 		}
 	}
-
-@FXML
-public void Substraction()
-{
-	double num1= Double.parseDouble(txtBmontant.getText());
-	double num2= Double.parseDouble(txtMP.getText());
-	double result= num1-num2;
-	BudgetR.setText(Double.toString(result));
-}
-
 
 
 
@@ -396,7 +401,22 @@ public void Substraction()
 
 
 
-
+@FXML
+private void handleHelp() {
+	Alert alert=new Alert(AlertType.INFORMATION);
+	alert.setTitle("Notes sur l'Application");
+	alert.setHeaderText("Budget");
+	alert.setContentText("Cette Application est fait pour suivre et gérer les dépenses d'une entreprise. "
+			+ "Commencez par entrer la: date de la transaction, l'utilisation, le montant et le montant initial "
+			+ "d'argent dans le budget particulier. Ensuite, vous pouvez calculer le montant qui reste dans le budget "
+			+ "en appuyant sur calculer. Une fois que tous les champs sont complétés, vous pouvez appuyer sur ajouter et "
+			+ "toutes les données saisies entreront dans le tableau. Une fois qu'il y a des données dans le tableau, "
+			+ "vous pouvez: supprimer, redémarrer et modifier. Ou vous pouvez enregistrer les données en appuyant sur "
+			+ "Enregistrer ou pour enregistrer les données sur votre ordinateur en appuyant sur Enregistrer sous dans "
+			+ "le menu Fichier. Vous avez également la possibilité d'ouvrir des fichiers précédemment enregistrés avec"
+			+ " l'applicaon.");
+	alert.showAndWait();
+}
 
 
 
